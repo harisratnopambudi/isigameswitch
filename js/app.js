@@ -23,8 +23,8 @@ function getActiveGamesDatabase() {
 
 function getStoreSettings() {
     const defaultSettings = {
-        waNumber: '6281234567890',
-        waDisplay: '0812-3456-7890',
+        waNumber: '6285155228041',
+        waDisplay: '0851-5522-8041',
         instagram: 'isigameswitch',
         hours: '09.00 - 22.00 WIB',
         price1: '10.000',
@@ -45,7 +45,7 @@ function getStoreSettings() {
 
 function applyStoreSettings() {
     const s = getStoreSettings();
-    const wa = s.waNumber.replace(/[^0-9]/g, '') || '6281234567890';
+    const wa = s.waNumber.replace(/[^0-9]/g, '') || '6285155228041';
 
     // Update all WhatsApp links
     document.querySelectorAll('a[href*="wa.me/"]').forEach(a => {
@@ -464,7 +464,7 @@ function orderCart() {
     message += `\nTotal: ${selectedGames.length} game (est. ${sizeFormatted})\n`;
     message += `\nMohon info total harga dan cara prosesnya ya. Terima kasih!`;
 
-    const wa = getStoreSettings().waNumber.replace(/[^0-9]/g, '') || '6281234567890';
+    const wa = getStoreSettings().waNumber.replace(/[^0-9]/g, '') || '6285155228041';
     const encoded = encodeURIComponent(message);
     window.open(`https://wa.me/${wa}?text=${encoded}`, '_blank');
 }
@@ -488,7 +488,7 @@ function openModal(gameId) {
     const modal = document.getElementById('gameModal');
     const modalBody = document.getElementById('modalBody');
     const isSelected = currentCart.includes(game.id);
-    const wa = getStoreSettings().waNumber.replace(/[^0-9]/g, '') || '6281234567890';
+    const wa = getStoreSettings().waNumber.replace(/[^0-9]/g, '') || '6285155228041';
 
     const genre = safeGenre(game.genre);
     const image = safeImageUrl(game.image);
