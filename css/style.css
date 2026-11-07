@@ -1794,3 +1794,73 @@ img {
         font-size: 0.8rem;
     }
 }
+
+/* === Lokasi (SEO Lokal Purwakarta) === */
+.lokasi {
+    padding: 40px 0 0;
+}
+
+.lokasi-card {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    max-width: 820px;
+    margin: 0 auto;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+}
+
+.lokasi-icon {
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+    border-radius: var(--radius-md);
+    background: rgba(230, 0, 18, 0.1);
+    color: var(--primary-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lokasi-title {
+    font-size: 1.3rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.lokasi-text {
+    font-size: 0.92rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+}
+
+.lokasi-text strong {
+    color: var(--text-primary);
+}
+
+.lokasi-tags {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.lokasi-tags li {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    padding: 4px 12px;
+    border-radius: 50px;
+}
+
+@media (max-width: 600px) {
+    .lokasi-card {
+        flex-direction: column;
+        padding: 22px;
+    }
+}
