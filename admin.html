@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Admin Panel - Kelola Katalog Game Switch</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .admin-page {
+            padding: 100px 0 60px;
+            min-height: 100vh;
+        }
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .admin-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 8px;
+        }
+        .admin-tab-btn {
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+        .admin-tab-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .admin-tab-btn.active {
+            background: var(--bg-card);
+            border-color: var(--border);
+            color: var(--primary-light);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .admin-grid {
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+        .admin-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 24px;
+        }
+        .admin-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.9rem;
+            outline: none;
+            transition: var(--transition);
+        }
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.07);
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            user-select: none;
+        }
+        .form-checkbox input {
+            accent-color: var(--primary);
+            width: 16px;
+            height: 16px;
+        }
+        .cover-preview-box {
+            aspect-ratio: 21 / 34; /* Rasio Asli Switch Box Art (105mm x 170mm) */
+            max-width: 140px;
+            margin: 10px 0;
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            border: 1px dashed var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.2);
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        .cover-preview-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .search-helper-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .search-helper-btn:hover {
+            color: var(--text-primary);
+            border-color: var(--accent);
+        }
+        .table-responsive {
+            overflow-x: auto;
+            max-height: 600px;
+        }
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        .admin-table th {
+            text-align: left;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 2px solid var(--border);
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        .admin-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-primary);
+            vertical-align: middle;
+        }
+        .admin-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .btn-action-edit {
+            background: rgba(0, 212, 255, 0.15);
+            color: #00d4ff;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            margin-right: 6px;
+        }
+        .btn-action-edit:hover {
+            background: #00d4ff;
+            color: #0a0a1a;
+        }
+        .btn-action-del {
+            background: rgba(230, 0, 18, 0.15);
+            color: #ff4d4d;
+            border: 1px solid rgba(230, 0, 18, 0.3);
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+        .btn-action-del:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+        .export-box {
+            background: #080814;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px;
+            margin-top: 16px;
+        }
+        .export-box textarea {
+            width: 100%;
+            height: 120px;
+            background: transparent;
+            border: none;
+            color: #8be9fd;
+            font-family: monospace;
+            font-size: 0.8rem;
+            resize: vertical;
+            outline: none;
+        }
+        @media (max-width: 900px) {
+            .admin-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        /* === Login Gate === */
+        .login-gate {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 100px 20px 40px;
+        }
+        .login-card {
+            width: 100%;
+            max-width: 380px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 32px 28px;
+        }
+        .login-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: var(--radius-md);
+            background: rgba(230, 0, 18, 0.1);
+            color: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+        }
+        .login-card h1 {
+            font-size: 1.3rem;
+            text-align: center;
+            margin-bottom: 6px;
+        }
+        .login-card .login-sub {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .login-error {
+            display: none;
+            background: rgba(230, 0, 18, 0.1);
+            border: 1px solid rgba(230, 0, 18, 0.3);
+            color: #ff8a8a;
+            font-size: 0.82rem;
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 16px;
+        }
+        .login-error.show { display: block; }
+        .local-mode-banner {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 145, 0, 0.1);
+            border: 1px solid rgba(255, 145, 0, 0.3);
+            color: #ffb74d;
+            font-size: 0.85rem;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 20px;
+        }
+        .admin-user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        .is-hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <svg class="logo-svg" viewBox="0 0 24 24" fill="currentColor" width="28" height="28">
+                    <path d="M17 4H7a5 5 0 00-5 5v6a5 5 0 005 5h10a5 5 0 005-5V9a5 5 0 00-5-5zM7 13a2 2 0 110-4 2 2 0 010 4zm6-2h2v2h-2v-2zm4 2h-2v-2h2v2z"/>
+                </svg>
+                <span class="logo-text">ISI<span class="logo-highlight">Game</span>Switch &middot; Admin Panel</span>
+            </a>
+            <div class="admin-user-info">
+                <span id="adminUserEmail" class="is-hidden"></span>
+                <button type="button" id="btnLogout" class="btn btn-outline is-hidden" style="padding: 8px 16px; font-size: 0.85rem;" onclick="handleLogout()">Keluar</button>
+                <a href="index.html" class="btn btn-outline" style="padding: 8px 16px; font-size: 0.85rem;">
+                    Lihat Katalog Web &rarr;
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- LOGIN GATE (tampil jika Firebase aktif & belum login) -->
+    <div id="loginGate" class="login-gate is-hidden">
+        <div class="login-card">
+            <div class="login-icon">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            </div>
+            <h1>Login Admin</h1>
+            <p class="login-sub">Masuk dengan akun admin Firebase untuk mengelola katalog.</p>
+            <div id="loginError" class="login-error"></div>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" class="form-input" autocomplete="username" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" class="form-input" autocomplete="current-password" required>
+                </div>
+                <button type="submit" id="btnLogin" class="btn btn-primary btn-block">Masuk</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- LOADING -->
+    <div id="authLoading" class="login-gate">
+        <p style="color: var(--text-secondary); font-size: 0.9rem;">Memeriksa sesi login...</p>
+    </div>
+
+    <div class="admin-page is-hidden" id="adminApp">
+        <div class="container">
+            <div class="local-mode-banner" id="localModeBanner">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span>Mode lokal: Firebase belum terhubung. Perubahan hanya tersimpan di browser ini dan tidak terlihat oleh pembeli.</span>
+            </div>
+            <div class="admin-header">
+                <div>
+                    <h1 style="font-size: 1.8rem; font-weight: 800;">Panel Pengelolaan</h1>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Kelola katalog game dan kontak WhatsApp toko tanpa perlu menyentuh kode program.</p>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-outline" onclick="exportDatabaseModal()">Salin Kode games.js</button>
+                    <button class="btn btn-outline" onclick="resetToDefault()">Reset ke Awal</button>
+                </div>
+            </div>
+
+            <!-- TABS -->
+            <div class="admin-tabs">
+                <button class="admin-tab-btn active" onclick="switchTab('gamesTab', this)">Katalog Game</button>
+                <button class="admin-tab-btn" onclick="switchTab('settingsTab', this)">Pengaturan Kontak &amp; Harga</button>
+                <button class="admin-tab-btn" onclick="switchTab('firebaseTab', this)">
+                    <span id="firebaseStatusDot" style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#888; margin-right:6px;"></span>
+                    Koneksi Firebase
+                </button>
+            </div>
+
+            <!-- TAB 1: GAMES -->
+            <div id="gamesTab" class="tab-content active">
+                <div class="admin-grid">
+                    <!-- FORM INPUT GAME BARU -->
+                    <div class="admin-card">
+                        <h2 id="formTitleHeader">Tambah Game Baru</h2>
+                        <form id="gameForm" onsubmit="handleFormSubmit(event)">
+                            <div class="form-group">
+                                <label>Judul Game</label>
+                                <input type="text" id="gameTitle" class="form-input" placeholder="Contoh: Super Mario Wonder" required oninput="updateGoogleSearchBtn()">
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Genre</label>
+                                    <select id="gameGenre" class="form-select">
+                                        <option value="action">Action</option>
+                                        <option value="adventure">Adventure</option>
+                                        <option value="rpg">RPG</option>
+                                        <option value="racing">Racing</option>
+                                        <option value="sport">Sport</option>
+                                        <option value="puzzle">Puzzle</option>
+                                        <option value="fighting">Fighting</option>
+                                        <option value="simulation">Simulation</option>
+                                        <option value="platformer">Platformer</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Ukuran File</label>
+                                    <input type="text" id="gameSize" class="form-input" placeholder="Contoh: 4.5 GB" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Versi Game</label>
+                                    <input type="text" id="gameVersion" class="form-input" placeholder="v1.0.0" value="v1.0.0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Jumlah Pemain</label>
+                                    <input type="text" id="gamePlayers" class="form-input" placeholder="1-4 Players" value="1-4 Players">
+                                </div>
+                            </div>
+
+                            <div class="form-row" style="margin-bottom: 16px;">
+                                <label class="form-checkbox">
+                                    <input type="checkbox" id="gameDlc"> Include DLC
+                                </label>
+                                <div class="form-group" style="margin-bottom: 0;">
+                                    <select id="gameBadge" class="form-select" style="padding: 6px 10px; font-size: 0.8rem;">
+                                        <option value="">Tanpa Badge</option>
+                                        <option value="new">Badge NEW</option>
+                                        <option value="popular">Badge HOT</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Cover Thumbnail (Opsional)</label>
+                                <input type="text" id="gameImage" class="form-input" placeholder="URL gambar atau covers/nama-file.jpg" oninput="updatePreviewImage(this.value)">
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 6px;">
+                                    <button type="button" class="search-helper-btn" id="googleSearchBtn" onclick="openGoogleImageSearch()">
+                                        Cari Cover di Google (Switch Box Art)
+                                    </button>
+                                    <span style="font-size: 0.72rem; color: var(--text-muted);">(Biarkan kosong untuk auto-cover gradient)</span>
+                                </div>
+                                <div class="cover-preview-box" id="previewBox">
+                                    <span>Preview Cover</span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Deskripsi Singkat</label>
+                                <textarea id="gameDescription" class="form-textarea" rows="3" placeholder="Deskripsi game..."></textarea>
+                            </div>
+
+                            <button type="submit" id="btnSubmitForm" class="btn btn-primary btn-block">Simpan ke Katalog</button>
+                            <button type="button" id="btnCancelEdit" class="btn btn-outline btn-block" style="display: none; margin-top: 8px;" onclick="cancelEdit()">Batal Edit</button>
+                        </form>
+                    </div>
+
+                    <!-- DAFTAR GAME AKTIF -->
+                    <div class="admin-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <h2 style="margin-bottom: 0; border: none; padding: 0;">Katalog Aktif (<span id="totalGamesCount">0</span> Game)</h2>
+                            <input type="text" id="adminSearch" class="form-input" placeholder="Cari di daftar..." style="max-width: 200px; padding: 6px 12px; font-size: 0.8rem;" oninput="filterAdminList()">
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50px;">ID</th>
+                                        <th>Judul Game</th>
+                                        <th>Genre</th>
+                                        <th>Ukuran</th>
+                                        <th>DLC</th>
+                                        <th style="text-align: right;">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="adminTableBody">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div id="exportSection" class="export-box" style="display: none;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <strong style="font-size: 0.85rem; color: var(--text-primary);">Kode games.js Siap Pakai:</strong>
+                                <button class="btn btn-outline" style="padding: 4px 10px; font-size: 0.75rem;" onclick="copyExportCode()">Salin Kode</button>
+                            </div>
+                            <p style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 8px;">
+                                Bisa kamu salin dan tempel ke file <code>js/games.js</code> agar game baru tersimpan permanen di source code.
+                            </p>
+                            <textarea id="exportCodeText" readonly></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: PENGATURAN KONTAK & HARGA -->
+            <div id="settingsTab" class="tab-content">
+                <div class="admin-card" style="max-width: 650px; margin: 0 auto;">
+                    <h2>Pengaturan WhatsApp, Sosmed &amp; Harga Paket</h2>
+                    <form id="settingsForm" onsubmit="handleSettingsSubmit(event)">
+                        <div class="form-group">
+                            <label>Nomor WhatsApp (Format: 628xxxxxxxxxx)</label>
+                            <input type="text" id="settingWaNumber" class="form-input" placeholder="6281234567890" required>
+                            <small style="color: var(--text-muted); font-size: 0.75rem;">Gunakan awalan 62 tanpa tanda + atau spasi.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Tampilan Nomor di Web (Opsional)</label>
+                            <input type="text" id="settingWaDisplay" class="form-input" placeholder="0812-3456-7890">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Username Instagram (tanpa @)</label>
+                            <input type="text" id="settingInstagram" class="form-input" placeholder="isigameswitch">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Jam Operasional</label>
+                            <input type="text" id="settingHours" class="form-input" placeholder="09.00 - 22.00 WIB">
+                        </div>
+
+                        <h3 style="font-size: 1rem; margin: 24px 0 12px; color: var(--text-primary); border-top: 1px solid var(--border); padding-top: 16px;">Kustomisasi Harga Paket (Rp)</h3>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Paket Satuan (per game)</label>
+                                <input type="text" id="settingPrice1" class="form-input" placeholder="10.000">
+                            </div>
+                            <div class="form-group">
+                                <label>Paket Hemat 5</label>
+                                <input type="text" id="settingPrice5" class="form-input" placeholder="40.000">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Paket Super 10</label>
+                                <input type="text" id="settingPrice10" class="form-input" placeholder="70.000">
+                            </div>
+                            <div class="form-group">
+                                <label>Paket Unlimited (isi penuh)</label>
+                                <input type="text" id="settingPriceUnli" class="form-input" placeholder="150.000">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block" style="margin-top: 12px;">Simpan Pengaturan</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- TAB 3: FIREBASE CONFIG -->
+            <div id="firebaseTab" class="tab-content">
+                <div class="admin-card" style="max-width: 750px; margin: 0 auto;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                        <h2 style="margin-bottom:0; border:none; padding:0;">Koneksi Cloud Firestore (Firebase)</h2>
+                        <div id="firebaseStatusBadge" style="font-size:0.8rem; padding:4px 12px; border-radius:50px; background:rgba(255,255,255,0.06); color:var(--text-secondary);">
+                            Status: Memeriksa...
+                        </div>
+                    </div>
+
+                    <p style="font-size:0.85rem; color:var(--text-secondary); line-height:1.6; margin-bottom:20px;">
+                        Dengan menghubungkan Firebase, katalog game Anda tersimpan di cloud secara online real-time. Setiap game yang Anda tambahkan atau hapus dari panel ini akan langsung ter-update di HP pembeli tanpa perlu upload ulang file!
+                    </p>
+
+                    <!-- QUICK PASTE BOX -->
+                    <div class="form-group" style="background:rgba(0,0,0,0.25); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px; margin-bottom:24px;">
+                        <label style="color:var(--accent);">Cara Cepat: Tempel Snippet Config Firebase</label>
+                        <textarea id="firebaseRawSnippet" class="form-textarea" rows="4" placeholder="const firebaseConfig = {&#10;  apiKey: &quot;...&quot;,&#10;  authDomain: &quot;...&quot;,&#10;  projectId: &quot;...&quot;,&#10;  storageBucket: &quot;...&quot;,&#10;  messagingSenderId: &quot;...&quot;,&#10;  appId: &quot;...&quot;&#10;};" style="font-family:monospace; font-size:0.8rem;"></textarea>
+                        <button type="button" class="btn btn-outline" style="margin-top:8px; font-size:0.8rem; padding:6px 14px;" onclick="parseAndApplySnippet()">
+                            Terapkan dari Snippet
+                        </button>
+                    </div>
+
+                    <form id="firebaseForm" onsubmit="handleFirebaseSubmit(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>API Key</label>
+                                <input type="text" id="fbApiKey" class="form-input" placeholder="AIzaSy..." required>
+                            </div>
+                            <div class="form-group">
+                                <label>Project ID</label>
+                                <input type="text" id="fbProjectId" class="form-input" placeholder="isigameswitch-xxx" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Auth Domain</label>
+                                <input type="text" id="fbAuthDomain" class="form-input" placeholder="project-id.firebaseapp.com">
+                            </div>
+                            <div class="form-group">
+                                <label>Storage Bucket</label>
+                                <input type="text" id="fbStorageBucket" class="form-input" placeholder="project-id.appspot.com">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Messaging Sender ID</label>
+                                <input type="text" id="fbSenderId" class="form-input" placeholder="123456789">
+                            </div>
+                            <div class="form-group">
+                                <label>App ID</label>
+                                <input type="text" id="fbAppId" class="form-input" placeholder="1:123456:web:abcdef">
+                            </div>
+                        </div>
+
+                        <div style="display:flex; gap:12px; margin-top:16px;">
+                            <button type="submit" class="btn btn-primary" style="flex:1;">Simpan &amp; Hubungkan Firebase</button>
+                            <button type="button" class="btn btn-outline" onclick="disconnectFirebase()">Putuskan Koneksi</button>
+                        </div>
+                    </form>
+
+                    <!-- MIGRATION TOOL -->
+                    <div id="migrationBox" style="margin-top:28px; padding-top:20px; border-top:1px solid var(--border);">
+                        <h3 style="font-size:0.95rem; margin-bottom:8px; color:var(--text-primary);">Migrasi Data ke Cloud Firestore</h3>
+                        <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:12px;">
+                            Baru pertama kali pasang Firebase? Klik tombol di bawah untuk meng-upload ke-50 game bawaan langsung ke koleksi Cloud Firestore Anda dalam 1 detik.
+                        </p>
+                        <button type="button" class="btn btn-outline" id="btnMigrate" onclick="handleMigrateDefaultGames()" style="border-color:var(--accent); color:var(--accent);">
+                            Upload 50 Game Default ke Firestore
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <!-- Firebase App & Firestore SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+
+    <script src="js/games.js"></script>
+    <script>
+        let adminGames = [];
+        let editingGameId = null;
+        let adminDataLoaded = false;
+
+        // ==========================================
+        // AUTH GATE
+        // ==========================================
+
+        function showView(view) {
+            document.getElementById('authLoading').classList.toggle('is-hidden', view !== 'loading');
+            document.getElementById('loginGate').classList.toggle('is-hidden', view !== 'login');
+            document.getElementById('adminApp').classList.toggle('is-hidden', view !== 'app');
+        }
+
+        function initAdminPage() {
+            initFirebaseApp();
+
+            // Firebase tidak aktif -> mode lokal (perubahan hanya di browser ini, tidak berisiko)
+            if (!isFirebaseReady || !auth) {
+                document.getElementById('localModeBanner').style.display = 'flex';
+                showView('app');
+                loadAdminData();
+                return;
+            }
+
+            auth.onAuthStateChanged(user => {
+                const emailEl = document.getElementById('adminUserEmail');
+                const logoutBtn = document.getElementById('btnLogout');
+                if (user) {
+                    emailEl.textContent = user.email;
+                    emailEl.classList.remove('is-hidden');
+                    logoutBtn.classList.remove('is-hidden');
+                    showView('app');
+                    if (!adminDataLoaded) loadAdminData();
+                } else {
+                    emailEl.classList.add('is-hidden');
+                    logoutBtn.classList.add('is-hidden');
+                    adminDataLoaded = false;
+                    showView('login');
+                }
+            });
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const errBox = document.getElementById('loginError');
+            const btn = document.getElementById('btnLogin');
+
+            errBox.classList.remove('show');
+            btn.disabled = true;
+            btn.textContent = 'Memproses...';
+            try {
+                await loginAdmin(email, password);
+                document.getElementById('loginPassword').value = '';
+            } catch (err) {
+                errBox.textContent = getAuthErrorMessage(err);
+                errBox.classList.add('show');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Masuk';
+            }
+        }
+
+        async function handleLogout() {
+            await logoutAdmin();
+            showToast('Anda telah keluar.');
+        }
+
+        function firebaseErrorToast(err, localMsg) {
+            if (isPermissionError(err)) {
+                showToast(`${localMsg} Ditolak oleh Firestore: akun ini bukan admin atau rules belum dipasang.`);
+            } else {
+                showToast(`${localMsg} Gagal menyimpan ke Firebase.`);
+            }
+        }
+
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.admin-tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function loadAdminData() {
+            adminDataLoaded = true;
+            updateFirebaseUIStatus();
+
+            const saved = localStorage.getItem('custom_games_database');
+            if (saved) {
+                try {
+                    adminGames = JSON.parse(saved);
+                } catch(e) {
+                    adminGames = [...GAMES_DATABASE];
+                }
+            } else {
+                adminGames = [...GAMES_DATABASE];
+            }
+            renderAdminTable();
+            loadSettingsForm();
+            loadFirebaseConfigForm();
+
+            // Jika Firebase aktif, load langsung dari Firestore
+            if (isFirebaseReady && typeof getGamesFromFirebase === 'function') {
+                getGamesFromFirebase().then(fbGames => {
+                    if (fbGames && fbGames.length > 0) {
+                        adminGames = fbGames;
+                        renderAdminTable();
+                        console.log("Admin tersinkron dengan Firestore:", fbGames.length, "game");
+                    }
+                }).catch(err => {
+                    console.warn("Gagal fetch dari Firestore:", err);
+                });
+            }
+        }
+
+        function saveAdminData() {
+            localStorage.setItem('custom_games_database', JSON.stringify(adminGames));
+            renderAdminTable();
+        }
+
+        function renderAdminTable(filterQuery = '') {
+            const tbody = document.getElementById('adminTableBody');
+            const total = document.getElementById('totalGamesCount');
+            total.textContent = adminGames.length;
+
+            let list = adminGames;
+            if (filterQuery) {
+                const q = filterQuery.toLowerCase();
+                list = list.filter(g => g.title.toLowerCase().includes(q) || g.genre.toLowerCase().includes(q));
+            }
+
+            tbody.innerHTML = list.map(game => {
+                const id = Number.isFinite(Number(game.id)) ? Number(game.id) : 0;
+                return `
+                <tr>
+                    <td style="color: var(--text-muted); font-size: 0.8rem;">#${id}</td>
+                    <td>
+                        <strong>${escapeHtml(game.title)}</strong>
+                        ${game.badge ? `<span style="font-size: 0.65rem; background: var(--border); padding: 2px 6px; border-radius: 3px; margin-left: 6px;">${escapeHtml(String(game.badge).toUpperCase())}</span>` : ''}
+                    </td>
+                    <td><span style="text-transform: capitalize; color: var(--text-secondary);">${escapeHtml(game.genre)}</span></td>
+                    <td style="color: var(--text-secondary);">${escapeHtml(game.size)}</td>
+                    <td>${game.dlc ? '<span style="color: var(--success);">&#10003; Ya</span>' : '<span style="color: var(--text-muted);">-</span>'}</td>
+                    <td style="text-align: right; white-space: nowrap;">
+                        <button class="btn-action-edit" onclick="startEditGame(${id})" title="Edit game ini">Edit</button>
+                        <button class="btn-action-del" onclick="deleteGame(${id})" title="Hapus game ini">Hapus</button>
+                    </td>
+                </tr>
+            `;
+            }).join('');
+        }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            const title = document.getElementById('gameTitle').value.trim();
+            const genre = document.getElementById('gameGenre').value;
+            const size = document.getElementById('gameSize').value.trim();
+            const version = document.getElementById('gameVersion').value.trim() || 'v1.0.0';
+            const players = document.getElementById('gamePlayers').value.trim() || '1 Player';
+            const dlc = document.getElementById('gameDlc').checked;
+            const badge = document.getElementById('gameBadge').value || null;
+            const image = document.getElementById('gameImage').value.trim();
+            if (image && !isValidImageUrl(image)) {
+                alert('URL gambar tidak valid. Gunakan link yang diawali https:// atau path lokal seperti covers/nama-file.jpg (tanpa spasi atau tanda kutip).');
+                return;
+            }
+            const description = document.getElementById('gameDescription').value.trim() || `Game ${title} untuk Nintendo Switch CFW.`;
+
+            if (editingGameId !== null) {
+                const index = adminGames.findIndex(g => g.id === editingGameId);
+                if (index > -1) {
+                    const updatedData = {
+                        ...adminGames[index],
+                        title,
+                        genre,
+                        size,
+                        badge,
+                        description,
+                        players,
+                        dlc,
+                        version,
+                        image
+                    };
+                    adminGames[index] = updatedData;
+                    saveAdminData();
+
+                    // Simpan ke Firebase jika aktif
+                    if (isFirebaseReady && typeof updateGameInFirebase === 'function') {
+                        try {
+                            await updateGameInFirebase(editingGameId, updatedData);
+                            showToast(`Game "${title}" berhasil diupdate di Cloud & Lokal!`);
+                        } catch(err) {
+                            firebaseErrorToast(err, 'Diperbarui di lokal saja.');
+                        }
+                    } else {
+                        showToast(`Game "${title}" berhasil diperbarui!`);
+                    }
+                }
+                cancelEdit();
+                return;
+            }
+
+            const nextId = adminGames.length > 0 ? Math.max(...adminGames.map(g => g.id)) + 1 : 1;
+
+            const newGame = {
+                id: nextId,
+                title,
+                genre,
+                size,
+                badge,
+                description,
+                players,
+                dlc,
+                version,
+                image
+            };
+
+            adminGames.unshift(newGame);
+            saveAdminData();
+
+            // Simpan ke Firebase jika aktif
+            if (isFirebaseReady && typeof addGameToFirebase === 'function') {
+                try {
+                    await addGameToFirebase(newGame);
+                    showToast(`Game "${title}" berhasil disimpan di Cloud Firestore!`);
+                } catch(err) {
+                    firebaseErrorToast(err, 'Tersimpan di lokal saja.');
+                }
+            } else {
+                showToast(`Game "${title}" berhasil ditambahkan!`);
+            }
+
+            document.getElementById('gameForm').reset();
+            document.getElementById('previewBox').innerHTML = '<span>Preview Cover</span>';
+        }
+
+        function startEditGame(id) {
+            const game = adminGames.find(g => g.id === id);
+            if (!game) return;
+
+            editingGameId = id;
+            document.getElementById('gameTitle').value = game.title;
+            document.getElementById('gameGenre').value = game.genre;
+            document.getElementById('gameSize').value = game.size;
+            document.getElementById('gameVersion').value = game.version || 'v1.0.0';
+            document.getElementById('gamePlayers').value = game.players || '1 Player';
+            document.getElementById('gameDlc').checked = !!game.dlc;
+            document.getElementById('gameBadge').value = game.badge || '';
+            document.getElementById('gameImage').value = game.image || '';
+            document.getElementById('gameDescription').value = game.description || '';
+
+            updatePreviewImage(game.image);
+            updateGoogleSearchBtn();
+
+            document.getElementById('formTitleHeader').textContent = `Edit Game: #${game.id} - ${game.title}`;
+            document.getElementById('btnSubmitForm').textContent = 'Perbarui Game';
+            document.getElementById('btnCancelEdit').style.display = 'block';
+
+            document.getElementById('gameForm').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cancelEdit() {
+            editingGameId = null;
+            document.getElementById('gameForm').reset();
+            document.getElementById('formTitleHeader').textContent = 'Tambah Game Baru';
+            document.getElementById('btnSubmitForm').textContent = 'Simpan ke Katalog';
+            document.getElementById('btnCancelEdit').style.display = 'none';
+            document.getElementById('previewBox').innerHTML = '<span>Preview Cover</span>';
+        }
+
+        async function deleteGame(id) {
+            const game = adminGames.find(g => g.id === id);
+            if (!confirm(`Yakin ingin menghapus game "${game ? game.title : ''}"?`)) return;
+
+            adminGames = adminGames.filter(g => g.id !== id);
+            saveAdminData();
+
+            if (isFirebaseReady && typeof deleteGameFromFirebase === 'function') {
+                try {
+                    await deleteGameFromFirebase(id);
+                    showToast('Game berhasil dihapus dari Cloud & Lokal!');
+                } catch(e) {
+                    firebaseErrorToast(e, 'Dihapus dari lokal saja.');
+                }
+            } else {
+                showToast('Game berhasil dihapus');
+            }
+        }
+
+        function resetToDefault() {
+            if (!confirm('Yakin ingin mereset katalog ke 50 game bawaan default?')) return;
+            localStorage.removeItem('custom_games_database');
+            adminGames = [...GAMES_DATABASE];
+            renderAdminTable();
+            showToast('Katalog dikembalikan ke data awal');
+        }
+
+        function updatePreviewImage(url) {
+            const box = document.getElementById('previewBox');
+            if (!url) {
+                box.innerHTML = '<span>Preview Cover</span>';
+                return;
+            }
+            if (!isValidImageUrl(url)) {
+                box.innerHTML = '<span style="color:#ff6b6b">URL tidak valid</span>';
+                return;
+            }
+            // Dibuat lewat DOM, bukan string HTML, agar URL tidak bisa menyisipkan kode
+            const img = document.createElement('img');
+            img.src = url;
+            img.onerror = () => {
+                box.innerHTML = '<span style="color:#ff6b6b">Gambar gagal dimuat</span>';
+            };
+            box.innerHTML = '';
+            box.appendChild(img);
+        }
+
+        // Sama dengan safeImageUrl di app.js
+        function isValidImageUrl(url) {
+            url = String(url || '').trim();
+            if (!/^[^\s"'()<>\\`]+$/.test(url)) return false;
+            if (/^https:\/\//i.test(url)) return true;
+            if (/^[a-z]+:/i.test(url) || url.startsWith('//')) return false;
+            return true;
+        }
+
+        function updateGoogleSearchBtn() {
+            const title = document.getElementById('gameTitle').value.trim();
+            const btn = document.getElementById('googleSearchBtn');
+            btn.style.opacity = title ? '1' : '0.6';
+        }
+
+        function openGoogleImageSearch() {
+            const title = document.getElementById('gameTitle').value.trim();
+            if (!title) {
+                alert('Tolong ketik judul game terlebih dahulu.');
+                return;
+            }
+            const query = encodeURIComponent(`${title} nintendo switch box art cover`);
+            window.open(`https://www.google.com/search?tbm=isch&q=${query}`, '_blank');
+        }
+
+        function filterAdminList() {
+            const q = document.getElementById('adminSearch').value;
+            renderAdminTable(q);
+        }
+
+        function exportDatabaseModal() {
+            const exportSection = document.getElementById('exportSection');
+            const textarea = document.getElementById('exportCodeText');
+
+            const code = `// ================================\n// Game Database - ISI Game Switch\n// Auto-generated\n// ================================\n\nconst GAMES_DATABASE = ${JSON.stringify(adminGames, null, 4)};\n`;
+            textarea.value = code;
+            exportSection.style.display = 'block';
+            textarea.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function copyExportCode() {
+            const textarea = document.getElementById('exportCodeText');
+            textarea.select();
+            document.execCommand('copy');
+            showToast('Kode berhasil disalin ke clipboard!');
+        }
+
+        // Settings
+        function loadSettingsForm() {
+            const defaultSettings = {
+                waNumber: '6281234567890',
+                waDisplay: '0812-3456-7890',
+                instagram: 'isigameswitch',
+                hours: '09.00 - 22.00 WIB',
+                price1: '10.000',
+                price5: '40.000',
+                price10: '70.000',
+                priceUnli: '150.000'
+            };
+            const saved = localStorage.getItem('switch_store_settings');
+            const s = saved ? { ...defaultSettings, ...JSON.parse(saved) } : defaultSettings;
+
+            document.getElementById('settingWaNumber').value = s.waNumber;
+            document.getElementById('settingWaDisplay').value = s.waDisplay;
+            document.getElementById('settingInstagram').value = s.instagram;
+            document.getElementById('settingHours').value = s.hours;
+            document.getElementById('settingPrice1').value = s.price1;
+            document.getElementById('settingPrice5').value = s.price5;
+            document.getElementById('settingPrice10').value = s.price10;
+            document.getElementById('settingPriceUnli').value = s.priceUnli;
+        }
+
+        async function handleSettingsSubmit(e) {
+            e.preventDefault();
+            const settings = {
+                waNumber: document.getElementById('settingWaNumber').value.trim(),
+                waDisplay: document.getElementById('settingWaDisplay').value.trim(),
+                instagram: document.getElementById('settingInstagram').value.trim(),
+                hours: document.getElementById('settingHours').value.trim(),
+                price1: document.getElementById('settingPrice1').value.trim(),
+                price5: document.getElementById('settingPrice5').value.trim(),
+                price10: document.getElementById('settingPrice10').value.trim(),
+                priceUnli: document.getElementById('settingPriceUnli').value.trim()
+            };
+            localStorage.setItem('switch_store_settings', JSON.stringify(settings));
+
+            if (isFirebaseReady && typeof saveStoreSettingsToFirebase === 'function') {
+                try {
+                    await saveStoreSettingsToFirebase(settings);
+                    showToast('Pengaturan toko berhasil disimpan di Cloud & Lokal!');
+                } catch(e) {
+                    firebaseErrorToast(e, 'Tersimpan di lokal saja.');
+                }
+            } else {
+                showToast('Pengaturan toko & WhatsApp berhasil disimpan!');
+            }
+        }
+
+        // ==========================================
+        // FIREBASE TAB & CONNECTION HANDLERS
+        // ==========================================
+
+        function updateFirebaseUIStatus() {
+            const badge = document.getElementById('firebaseStatusBadge');
+            const dot = document.getElementById('firebaseStatusDot');
+
+            if (isFirebaseReady) {
+                if (badge) {
+                    badge.innerHTML = `<span style="color:#00c853;">&#9679;</span> Terhubung (${FIREBASE_CONFIG.projectId})`;
+                    badge.style.background = 'rgba(0, 200, 83, 0.12)';
+                    badge.style.color = '#69f0ae';
+                    badge.style.borderColor = 'rgba(0, 200, 83, 0.3)';
+                }
+                if (dot) dot.style.background = '#00c853';
+            } else {
+                if (badge) {
+                    badge.innerHTML = `<span style="color:#ff9100;">&#9679;</span> Mode Offline / Belum Terhubung`;
+                    badge.style.background = 'rgba(255, 145, 0, 0.12)';
+                    badge.style.color = '#ffb74d';
+                    badge.style.borderColor = 'rgba(255, 145, 0, 0.3)';
+                }
+                if (dot) dot.style.background = '#888';
+            }
+        }
+
+        function loadFirebaseConfigForm() {
+            document.getElementById('fbApiKey').value = FIREBASE_CONFIG.apiKey || '';
+            document.getElementById('fbProjectId').value = FIREBASE_CONFIG.projectId || '';
+            document.getElementById('fbAuthDomain').value = FIREBASE_CONFIG.authDomain || '';
+            document.getElementById('fbStorageBucket').value = FIREBASE_CONFIG.storageBucket || '';
+            document.getElementById('fbSenderId').value = FIREBASE_CONFIG.messagingSenderId || '';
+            document.getElementById('fbAppId').value = FIREBASE_CONFIG.appId || '';
+        }
+
+        function handleFirebaseSubmit(e) {
+            e.preventDefault();
+            const config = {
+                apiKey: document.getElementById('fbApiKey').value.trim(),
+                projectId: document.getElementById('fbProjectId').value.trim(),
+                authDomain: document.getElementById('fbAuthDomain').value.trim(),
+                storageBucket: document.getElementById('fbStorageBucket').value.trim(),
+                messagingSenderId: document.getElementById('fbSenderId').value.trim(),
+                appId: document.getElementById('fbAppId').value.trim()
+            };
+
+            localStorage.setItem('switch_firebase_config', JSON.stringify(config));
+            showToast("Config tersimpan. Memuat ulang halaman...");
+            // Muat ulang agar Firebase & login admin diinisialisasi dengan config baru
+            setTimeout(() => location.reload(), 800);
+        }
+
+        function parseAndApplySnippet() {
+            const raw = document.getElementById('firebaseRawSnippet').value;
+            if (!raw) {
+                alert("Silakan tempel kode firebaseConfig terlebih dahulu.");
+                return;
+            }
+
+            const extract = (key) => {
+                const match = raw.match(new RegExp(`${key}\\s*:\\s*["']([^"']+)["']`));
+                return match ? match[1] : '';
+            };
+
+            const apiKey = extract('apiKey');
+            const projectId = extract('projectId');
+            const authDomain = extract('authDomain');
+            const storageBucket = extract('storageBucket');
+            const messagingSenderId = extract('messagingSenderId');
+            const appId = extract('appId');
+
+            if (apiKey) document.getElementById('fbApiKey').value = apiKey;
+            if (projectId) document.getElementById('fbProjectId').value = projectId;
+            if (authDomain) document.getElementById('fbAuthDomain').value = authDomain;
+            if (storageBucket) document.getElementById('fbStorageBucket').value = storageBucket;
+            if (messagingSenderId) document.getElementById('fbSenderId').value = messagingSenderId;
+            if (appId) document.getElementById('fbAppId').value = appId;
+
+            showToast("Nilai config berhasil diekstrak ke formulir! Klik 'Simpan' untuk menghubungkan.");
+        }
+
+        function disconnectFirebase() {
+            if (!confirm("Putuskan koneksi Firebase? Katalog akan kembali menggunakan data lokal.")) return;
+            // Catatan: ini hanya menghapus config yang tersimpan di browser ini.
+            // Config bawaan di js/firebase-config.js tetap dipakai oleh website pembeli.
+            localStorage.removeItem('switch_firebase_config');
+            logoutAdmin().finally(() => {
+                showToast("Config lokal dihapus. Memuat ulang halaman...");
+                setTimeout(() => location.reload(), 800);
+            });
+        }
+
+        async function handleMigrateDefaultGames() {
+            if (!isFirebaseReady) {
+                alert("Hubungkan Firebase terlebih dahulu sebelum meng-upload game!");
+                return;
+            }
+
+            const btn = document.getElementById('btnMigrate');
+            btn.textContent = "Mengupload...";
+            btn.disabled = true;
+
+            try {
+                await migrateDefaultGamesToFirebase(GAMES_DATABASE);
+                showToast("50 Game bawaan berhasil di-upload ke Cloud Firestore!");
+                btn.textContent = "Berhasil Diupload";
+                setTimeout(() => {
+                    btn.textContent = "Upload 50 Game Default ke Firestore";
+                    btn.disabled = false;
+                }, 3000);
+            } catch (err) {
+                alert(isPermissionError(err)
+                    ? "Ditolak oleh Firestore. Pastikan Anda login dengan email admin yang tercantum di Security Rules (file firestore.rules)."
+                    : "Gagal upload ke Firebase. Periksa koneksi internet lalu coba lagi.");
+                btn.textContent = "Gagal (Cek Rules)";
+                btn.disabled = false;
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        function escapeHtml(str) {
+            return String(str ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        document.addEventListener('DOMContentLoaded', initAdminPage);
+    </script>
+</body>
+</html>
