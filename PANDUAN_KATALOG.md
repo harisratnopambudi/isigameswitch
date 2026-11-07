@@ -117,3 +117,30 @@ Agar calon pembeli di Instagram atau WhatsApp bisa membuka katalog ini dari HP m
 
   Mohon info total harga dan cara prosesnya ya. Terima kasih!
   ```
+
+---
+
+## 6. SEO & THUMBNAIL SAAT LINK DIBAGIKAN
+
+- **Thumbnail share** (WhatsApp, Facebook, Telegram, X): file `assets/og-image.jpg` (1200x630). Kalau ingin mengganti, buat gambar baru dengan ukuran sama, simpan dengan nama yang sama, lalu tambahkan `?v=2` di belakang URL `og:image` dan `twitter:image` di `index.html` supaya cache WhatsApp/Facebook ikut diperbarui.
+- **WhatsApp menyimpan cache thumbnail.** Kalau link sudah pernah dibagikan sebelum thumbnail dipasang, kirim link dengan tambahan parameter, misalnya `https://isigameswitch.my.id/?ref=wa`.
+- **Cek tampilan share:** [Facebook Sharing Debugger](https://developers.facebook.com/tools/debug/) (klik *Scrape Again* untuk refresh cache) dan [opengraph.xyz](https://www.opengraph.xyz/).
+- **Daftarkan ke Google:** buka [Google Search Console](https://search.google.com/search-console) -> *Add property* -> *Domain* `isigameswitch.my.id` -> verifikasi dengan record TXT di DNS IndoWebsite -> menu *Sitemaps* -> kirim `sitemap.xml`.
+- **Harga di meta description** tertulis "mulai Rp10.000/game". Kalau harga paket diubah lewat Admin Panel, ubah juga teks itu di `<head>` file `index.html`.
+- **File `CNAME`** wajib tetap ada di repo agar domain `isigameswitch.my.id` tidak lepas dari GitHub Pages.
+
+---
+
+## 7. SEO LOKAL PURWAKARTA (AGAR MUNCUL DI PENCARIAN "ISI GAME SWITCH PURWAKARTA")
+
+Website sudah dioptimasi untuk kata kunci Purwakarta: judul, deskripsi, data lokasi untuk Google, bagian "Jasa Isi Game Switch di Purwakarta", dan FAQ area layanan. Langkah berikut yang paling berpengaruh:
+
+1. **Google Business Profile (paling penting).** Buka [business.google.com](https://business.google.com) -> buat profil "ISIGameSwitch".
+   - Kategori: *Toko video game* / *Layanan perbaikan konsol game*.
+   - Karena berjualan dari rumah: pilih **tidak ada lokasi yang dikunjungi pelanggan**, lalu isi **area layanan: Purwakarta** (alamat rumah tidak ditampilkan).
+   - Isi website `https://isigameswitch.my.id`, nomor WhatsApp, jam buka, dan foto.
+   - Selesaikan verifikasi dari Google.
+2. **Minta ulasan Google** dari pelanggan yang puas. Jumlah dan kualitas ulasan sangat memengaruhi peringkat di Maps dan rekomendasi AI Google.
+3. **Konsisten di semua tempat.** Tulis nama, kota (Purwakarta), dan link website yang sama di bio Instagram, WhatsApp Business, marketplace, dan grup komunitas.
+4. **Google Search Console.** Daftarkan domain dan kirim `sitemap.xml` (lihat bagian 6).
+5. **Isi nomor WhatsApp asli** di Admin Panel. Kalau sudah, nomor itu juga bisa ditambahkan sebagai `"telephone"` di data terstruktur `index.html`.
