@@ -1302,7 +1302,7 @@
                             notFound.push(game.title);
                         }
                     } catch (err) {
-                        if (err.message === 'NETWORK' || err.message === 'HTTP_429') {
+                        if (err.message === 'NETWORK' || err.message === 'TIMEOUT' || err.message === 'HTTP_429') {
                             alert(releaseErrorMessage(err));
                             break;
                         }

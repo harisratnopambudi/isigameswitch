@@ -148,7 +148,7 @@ function initNavbar() {
 // === Render Games ===
 function initGames() {
     currentActiveGames = getActiveGamesDatabase();
-    renderGames(currentActiveGames);
+    filterGames();
 
     // Hubungkan ke Firebase jika tersedia
     if (typeof initFirebaseApp === 'function' && initFirebaseApp()) {
@@ -360,11 +360,38 @@ function filterGames() {
         case 'size-desc':
             filtered.sort((a, b) => parseSize(b.size) - parseSize(a.size));
             break;
+        case 'oldest':
+            filtered.sort((a, b) => compareRelease(a, b, false));
+            break;
+        case 'newest':
         default:
+            filtered.sort((a, b) => compareRelease(a, b, true));
             break;
     }
 
     renderGames(filtered);
+}
+
+// Urutkan berdasarkan tanggal rilis (format YYYY-MM-DD).
+// Game tanpa tanggal rilis selalu di bawah, diurutkan dari yang terakhir ditambahkan.
+function compareRelease(a, b, newestFirst) {
+    const da = isIsoDate(a.releaseDate) ? a.releaseDate : '';
+    const db_ = isIsoDate(b.releaseDate) ? b.releaseDate : '';
+    if (da && db_) return newestFirst ? db_.localeCompare(da) : da.localeCompare(db_);
+    if (da) return -1;
+    if (db_) return 1;
+    return (Number(b.id) || 0) - (Number(a.id) || 0);
+}
+
+function isIsoDate(s) {
+    return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s);
+}
+
+function formatReleaseDate(iso) {
+    if (!isIsoDate(iso)) return '';
+    const bulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    const [y, m, d] = iso.split('-').map(Number);
+    return `${d} ${bulan[m - 1]} ${y}`;
 }
 
 function parseSize(sizeStr) {
@@ -510,6 +537,7 @@ function openModal(gameId) {
                 <span class="modal-detail-tag">Ukuran: ${escapeHtml(game.size)}</span>
                 <span class="modal-detail-tag">Pemain: ${escapeHtml(game.players)}</span>
                 <span class="modal-detail-tag">Versi: ${escapeHtml(game.version)}</span>
+                ${isIsoDate(game.releaseDate) ? `<span class="modal-detail-tag">Rilis: ${escapeHtml(formatReleaseDate(game.releaseDate))}</span>` : ''}
                 ${game.dlc ? '<span class="modal-detail-tag">Include DLC</span>' : ''}
             </div>
             <p class="modal-description">${escapeHtml(game.description)}</p>
