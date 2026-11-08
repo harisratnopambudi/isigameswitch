@@ -91,6 +91,9 @@ function applyStoreSettings() {
         if (s.price10) priceAmounts[2].textContent = s.price10;
         if (s.priceUnli) priceAmounts[3].textContent = s.priceUnli;
     }
+
+    // Harga di keranjang ikut berubah jika pengaturan harga diperbarui
+    if (typeof currentCart !== 'undefined' && document.getElementById('cartLabel')) updateCartUI();
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -394,6 +397,88 @@ function formatReleaseDate(iso) {
     return `${d} ${bulan[m - 1]} ${y}`;
 }
 
+// ================================
+// KALKULATOR HARGA PAKET
+// Mengikuti harga di Pengaturan admin (price1, price5, price10, priceUnli).
+//  - Satuan      : 1 game  = price1
+//  - Hemat 5     : 5 game  = price5
+//  - Super 10    : 10 game + bonus 1 (11 game) = price10
+//  - Unlimited   : isi penuh SD card = priceUnli (dipakai jika lebih murah)
+// ================================
+function parseRupiah(v, fallback) {
+    const n = parseInt(String(v == null ? '' : v).replace(/[^0-9]/g, ''), 10);
+    return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
+function formatRupiah(n) {
+    return 'Rp' + Math.round(n).toLocaleString('id-ID');
+}
+
+function getPackagePrices() {
+    const s = getStoreSettings();
+    return {
+        p1: parseRupiah(s.price1, 10000),
+        p5: parseRupiah(s.price5, 40000),
+        p10: parseRupiah(s.price10, 70000),
+        pUnli: parseRupiah(s.priceUnli, 150000)
+    };
+}
+
+/**
+ * Hitung harga termurah untuk n game.
+ * Hasil: { total, items: [{label, qty, unit, subtotal}], slots, spare, unlimited }
+ *  - slots: jumlah game yang tercakup paket (bisa > n jika paket lebih murah)
+ *  - spare: sisa slot gratis yang masih bisa ditambah tanpa biaya
+ */
+function calculateCartPrice(n) {
+    const P = getPackagePrices();
+    if (n <= 0) return { total: 0, items: [], slots: 0, spare: 0, unlimited: false };
+
+    let best = null;
+    const maxSuper = Math.ceil(n / 11);
+    for (let a = 0; a <= maxSuper; a++) {
+        const restA = Math.max(0, n - a * 11);
+        const maxHemat = Math.ceil(restA / 5);
+        for (let b = 0; b <= maxHemat; b++) {
+            const c = Math.max(0, restA - b * 5);
+            const total = a * P.p10 + b * P.p5 + c * P.p1;
+            const slots = a * 11 + b * 5 + c;
+            // Pilih yang termurah; jika sama, pilih yang memberi slot lebih banyak
+            if (!best || total < best.total || (total === best.total && slots > best.slots)) {
+                best = { a, b, c, total, slots };
+            }
+        }
+    }
+
+    if (P.pUnli <= best.total) {
+        return {
+            total: P.pUnli,
+            items: [{ label: 'Paket Unlimited (isi penuh SD card)', qty: 1, unit: P.pUnli, subtotal: P.pUnli }],
+            slots: n, spare: 0, unlimited: true
+        };
+    }
+
+    const items = [];
+    if (best.a) items.push({ label: 'Paket Super 10 (+ bonus 1 game)', qty: best.a, unit: P.p10, subtotal: best.a * P.p10 });
+    if (best.b) items.push({ label: 'Paket Hemat 5', qty: best.b, unit: P.p5, subtotal: best.b * P.p5 });
+    if (best.c) items.push({ label: 'Game satuan', qty: best.c, unit: P.p1, subtotal: best.c * P.p1 });
+
+    return { total: best.total, items, slots: best.slots, spare: best.slots - n, unlimited: false };
+}
+
+function describePriceShort(price) {
+    if (price.unlimited) return 'Paket Unlimited';
+    return price.items.map(it => {
+        if (it.label === 'Game satuan') return `${it.qty} game satuan`;
+        const name = it.label.replace(' (+ bonus 1 game)', '');
+        return it.qty > 1 ? `${it.qty}x ${name}` : name;
+    }).join(' + ');
+}
+
+function formatSize(totalMb) {
+    return totalMb >= 1024 ? (totalMb / 1024).toFixed(1) + ' GB' : totalMb.toFixed(0) + ' MB';
+}
+
 function parseSize(sizeStr) {
     sizeStr = String(sizeStr || '0');
     const num = parseFloat(sizeStr) || 0;
@@ -454,11 +539,27 @@ function updateCartUI() {
             if (game) totalSize += parseSize(game.size);
         });
 
-        const sizeFormatted = totalSize >= 1024
-            ? (totalSize / 1024).toFixed(1) + ' GB'
-            : totalSize.toFixed(0) + ' MB';
-
-        cartLabel.textContent = `${total} game dipilih (est. ${sizeFormatted})`;
+        const price = calculateCartPrice(total);
+        // Dibangun dengan textContent agar aman dari HTML injection
+        cartLabel.textContent = '';
+        const line1 = document.createElement('span');
+        line1.className = 'cart-line-main';
+        line1.textContent = formatRupiah(price.total);
+        const line2 = document.createElement('span');
+        line2.className = 'cart-line-sub';
+        line2.textContent = describePriceShort(price);
+        const size = document.createElement('span');
+        size.className = 'cart-line-size';
+        size.textContent = ` · est. ${formatSize(totalSize)}`;
+        line2.appendChild(size);
+        cartLabel.appendChild(line1);
+        cartLabel.appendChild(line2);
+        if (price.spare > 0) {
+            const line3 = document.createElement('span');
+            line3.className = 'cart-line-bonus';
+            line3.textContent = `+${price.spare} game gratis`;
+            cartLabel.appendChild(line3);
+        }
         cartBar.classList.add('visible');
     } else {
         cartBar.classList.remove('visible');
@@ -484,12 +585,20 @@ function orderCart() {
         totalSize += parseSize(g.size);
     });
 
-    const sizeFormatted = totalSize >= 1024
-        ? (totalSize / 1024).toFixed(1) + ' GB'
-        : totalSize.toFixed(0) + ' MB';
+    const price = calculateCartPrice(selectedGames.length);
 
-    message += `\nTotal: ${selectedGames.length} game (est. ${sizeFormatted})\n`;
-    message += `\nMohon info total harga dan cara prosesnya ya. Terima kasih!`;
+    message += `\nJumlah: ${selectedGames.length} game (est. ${formatSize(totalSize)})\n`;
+    message += `\nRincian harga:\n`;
+    price.items.forEach(it => {
+        message += it.qty > 1
+            ? `- ${it.label}: ${it.qty} x ${formatRupiah(it.unit)} = ${formatRupiah(it.subtotal)}\n`
+            : `- ${it.label}: ${formatRupiah(it.subtotal)}\n`;
+    });
+    message += `*Total: ${formatRupiah(price.total)}*\n`;
+    if (price.spare > 0) {
+        message += `(Masih bisa tambah ${price.spare} game lagi tanpa tambah biaya)\n`;
+    }
+    message += `\nSaya mau datang ke workshop. Mohon info jadwalnya ya. Terima kasih!`;
 
     const wa = getStoreSettings().waNumber.replace(/[^0-9]/g, '') || '6285155228041';
     const encoded = encodeURIComponent(message);
@@ -519,7 +628,8 @@ function openModal(gameId) {
 
     const genre = safeGenre(game.genre);
     const image = safeImageUrl(game.image);
-    const waMessage = encodeURIComponent(`Halo, saya mau order game:\n\n*${game.title}*\nGenre: ${capitalizeFirst(genre)}\nUkuran: ${game.size}\nVersi: ${game.version}\n\nMohon info lebih lanjut ya!`);
+    const singlePrice = formatRupiah(calculateCartPrice(1).total);
+    const waMessage = encodeURIComponent(`Halo, saya mau order game:\n\n*${game.title}*\nGenre: ${capitalizeFirst(genre)}\nUkuran: ${game.size}\nVersi: ${game.version}\nHarga: ${singlePrice} (satuan)\n\nSaya mau datang ke workshop. Mohon info jadwalnya ya. Terima kasih!`);
 
     const imageHtml = image
         ? `<div class="modal-image">
@@ -537,6 +647,7 @@ function openModal(gameId) {
                 <span class="modal-detail-tag">Ukuran: ${escapeHtml(game.size)}</span>
                 <span class="modal-detail-tag">Pemain: ${escapeHtml(game.players)}</span>
                 <span class="modal-detail-tag">Versi: ${escapeHtml(game.version)}</span>
+                <span class="modal-detail-tag">Harga: ${escapeHtml(formatRupiah(calculateCartPrice(1).total))}</span>
                 ${isIsoDate(game.releaseDate) ? `<span class="modal-detail-tag">Rilis: ${escapeHtml(formatReleaseDate(game.releaseDate))}</span>` : ''}
                 ${game.dlc ? '<span class="modal-detail-tag">Include DLC</span>' : ''}
             </div>

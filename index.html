@@ -133,6 +133,42 @@
     </script>
 </head>
 <body>
+    <!-- Background joy-con outline melayang (dekoratif) -->
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+        <defs>
+            <symbol id="jc-left" viewBox="0 0 64 144">
+                <path d="M54 4H36C17 4 6 19 6 38v68c0 19 11 34 30 34h18z"/>
+                <line x1="54" y1="4" x2="54" y2="140"/>
+                <circle cx="30" cy="42" r="11"/><circle cx="30" cy="42" r="6"/>
+                <circle cx="30" cy="80" r="4.5"/><circle cx="21" cy="89" r="4.5"/><circle cx="39" cy="89" r="4.5"/><circle cx="30" cy="98" r="4.5"/>
+                <line x1="42" y1="16" x2="48" y2="16"/>
+                <rect x="26" y="116" width="8" height="8" rx="1.5"/>
+            </symbol>
+            <symbol id="jc-right" viewBox="0 0 64 144">
+                <path d="M10 4h18c19 0 30 15 30 34v68c0 19-11 34-30 34H10z"/>
+                <line x1="10" y1="4" x2="10" y2="140"/>
+                <circle cx="34" cy="30" r="4.5"/><circle cx="25" cy="39" r="4.5"/><circle cx="43" cy="39" r="4.5"/><circle cx="34" cy="48" r="4.5"/>
+                <line x1="17" y1="16" x2="23" y2="16"/><line x1="20" y1="13" x2="20" y2="19"/>
+                <circle cx="34" cy="88" r="11"/><circle cx="34" cy="88" r="6"/>
+                <circle cx="28" cy="120" r="4.5"/>
+            </symbol>
+        </defs>
+    </svg>
+    <div class="joycon-bg" aria-hidden="true">
+        <svg class="jc jc-red" style="left:1.4%;width:92px;height:207px;--dur:27s;--delay:-2.0s;--rot:-213deg;--drift:14px"><use href="#jc-left"/></svg>
+        <svg class="jc jc-white" style="left:12.6%;width:46px;height:104px;--dur:28s;--delay:-12.1s;--rot:-181deg;--drift:-49px"><use href="#jc-right"/></svg>
+        <svg class="jc jc-red" style="left:17.3%;width:80px;height:180px;--dur:29s;--delay:-27.5s;--rot:-267deg;--drift:14px"><use href="#jc-left"/></svg>
+        <svg class="jc jc-blue" style="left:33.0%;width:46px;height:104px;--dur:43s;--delay:-36.9s;--rot:227deg;--drift:-42px"><use href="#jc-right"/></svg>
+        <svg class="jc jc-red" style="left:38.1%;width:80px;height:180px;--dur:31s;--delay:-3.2s;--rot:-215deg;--drift:-48px"><use href="#jc-left"/></svg>
+        <svg class="jc jc-blue" style="left:42.3%;width:46px;height:104px;--dur:32s;--delay:-15.9s;--rot:200deg;--drift:-1px"><use href="#jc-right"/></svg>
+        <svg class="jc jc-red" style="left:53.8%;width:62px;height:140px;--dur:33s;--delay:-26.2s;--rot:-140deg;--drift:13px"><use href="#jc-left"/></svg>
+        <svg class="jc jc-blue" style="left:62.5%;width:62px;height:140px;--dur:40s;--delay:-11.5s;--rot:-150deg;--drift:5px"><use href="#jc-right"/></svg>
+        <svg class="jc jc-red" style="left:72.9%;width:54px;height:122px;--dur:41s;--delay:-17.3s;--rot:-262deg;--drift:13px"><use href="#jc-left"/></svg>
+        <svg class="jc jc-blue" style="left:81.7%;width:62px;height:140px;--dur:37s;--delay:-22.0s;--rot:137deg;--drift:47px"><use href="#jc-right"/></svg>
+        <svg class="jc jc-white" style="left:85.7%;width:92px;height:207px;--dur:28s;--delay:-1.7s;--rot:285deg;--drift:13px"><use href="#jc-left"/></svg>
+        <svg class="jc jc-blue" style="left:98.4%;width:62px;height:140px;--dur:38s;--delay:-33.7s;--rot:125deg;--drift:60px"><use href="#jc-right"/></svg>
+    </div>
+
     <!-- Navbar -->
     <nav class="navbar" id="navbar">
         <div class="container nav-container">
