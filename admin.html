@@ -391,7 +391,7 @@
                         <form id="gameForm" onsubmit="handleFormSubmit(event)">
                             <div class="form-group">
                                 <label>Judul Game</label>
-                                <input type="text" id="gameTitle" class="form-input" placeholder="Contoh: Super Mario Wonder" required oninput="updateGoogleSearchBtn()">
+                                <input type="text" id="gameTitle" class="form-input" placeholder="Contoh: Super Mario Wonder" required oninput="updateGoogleSearchBtn()" onblur="autoFillReleaseDate(false)">
                             </div>
 
                             <div class="form-row">
@@ -424,6 +424,15 @@
                                     <label>Jumlah Pemain</label>
                                     <input type="text" id="gamePlayers" class="form-input" placeholder="1-4 Players" value="1-4 Players">
                                 </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Tanggal Rilis</label>
+                                <div style="display: flex; gap: 8px;">
+                                    <input type="date" id="gameRelease" class="form-input" style="flex: 1;">
+                                    <button type="button" class="btn btn-outline" id="btnFetchRelease" style="white-space: nowrap; padding: 8px 14px; font-size: 0.8rem;" onclick="autoFillReleaseDate(true)">Cari Otomatis</button>
+                                </div>
+                                <small id="releaseStatus" style="color: var(--text-muted); font-size: 0.75rem;">Terisi otomatis dari Wikidata saat judul diketik. Bisa juga diisi manual.</small>
                             </div>
 
                             <div class="form-row" style="margin-bottom: 16px;">
@@ -469,6 +478,10 @@
                             <h2 style="margin-bottom: 0; border: none; padding: 0;">Katalog Aktif (<span id="totalGamesCount">0</span> Game)</h2>
                             <input type="text" id="adminSearch" class="form-input" placeholder="Cari di daftar..." style="max-width: 200px; padding: 6px 12px; font-size: 0.8rem;" oninput="filterAdminList()">
                         </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px;">
+                            <small style="color: var(--text-muted); font-size: 0.75rem;">Diurutkan dari tanggal rilis terbaru. <span id="missingReleaseInfo"></span></small>
+                            <button type="button" class="btn btn-outline" id="btnBulkRelease" style="padding: 6px 12px; font-size: 0.78rem;" onclick="bulkFillReleaseDates()">Isi Tanggal Rilis Otomatis</button>
+                        </div>
 
                         <div class="table-responsive">
                             <table class="admin-table">
@@ -477,6 +490,7 @@
                                         <th style="width: 50px;">ID</th>
                                         <th>Judul Game</th>
                                         <th>Genre</th>
+                                        <th>Rilis</th>
                                         <th>Ukuran</th>
                                         <th>DLC</th>
                                         <th style="text-align: right;">Aksi</th>
@@ -644,6 +658,7 @@
     <script src="js/firebase-config.js"></script>
 
     <script src="js/games.js"></script>
+    <script src="js/release-date.js"></script>
     <script>
         let adminGames = [];
         let editingGameId = null;
@@ -772,7 +787,10 @@
             const total = document.getElementById('totalGamesCount');
             total.textContent = adminGames.length;
 
-            let list = adminGames;
+            let list = sortByReleaseDesc(adminGames);
+            const missing = adminGames.filter(g => !g.releaseDate).length;
+            const info = document.getElementById('missingReleaseInfo');
+            if (info) info.textContent = missing ? `${missing} game belum punya tanggal rilis.` : 'Semua game sudah punya tanggal rilis.';
             if (filterQuery) {
                 const q = filterQuery.toLowerCase();
                 list = list.filter(g => g.title.toLowerCase().includes(q) || g.genre.toLowerCase().includes(q));
@@ -788,6 +806,7 @@
                         ${game.badge ? `<span style="font-size: 0.65rem; background: var(--border); padding: 2px 6px; border-radius: 3px; margin-left: 6px;">${escapeHtml(String(game.badge).toUpperCase())}</span>` : ''}
                     </td>
                     <td><span style="text-transform: capitalize; color: var(--text-secondary);">${escapeHtml(game.genre)}</span></td>
+                    <td style="color: var(--text-secondary); white-space: nowrap;">${game.releaseDate ? escapeHtml(formatReleaseShort(game.releaseDate)) : '<span style="color: var(--text-muted);">-</span>'}</td>
                     <td style="color: var(--text-secondary);">${escapeHtml(game.size)}</td>
                     <td>${game.dlc ? '<span style="color: var(--success);">&#10003; Ya</span>' : '<span style="color: var(--text-muted);">-</span>'}</td>
                     <td style="text-align: right; white-space: nowrap;">
@@ -814,6 +833,11 @@
                 return;
             }
             const description = document.getElementById('gameDescription').value.trim() || `Game ${title} untuk Nintendo Switch CFW.`;
+            let releaseDate = document.getElementById('gameRelease').value || '';
+            if (!releaseDate) {
+                const found = await autoFillReleaseDate(true);
+                releaseDate = found || '';
+            }
 
             if (editingGameId !== null) {
                 const index = adminGames.findIndex(g => g.id === editingGameId);
@@ -828,7 +852,8 @@
                         players,
                         dlc,
                         version,
-                        image
+                        image,
+                        releaseDate
                     };
                     adminGames[index] = updatedData;
                     saveAdminData();
@@ -861,7 +886,8 @@
                 players,
                 dlc,
                 version,
-                image
+                image,
+                releaseDate
             };
 
             adminGames.unshift(newGame);
@@ -881,6 +907,7 @@
 
             document.getElementById('gameForm').reset();
             document.getElementById('previewBox').innerHTML = '<span>Preview Cover</span>';
+            resetReleaseStatus();
         }
 
         function startEditGame(id) {
@@ -897,6 +924,8 @@
             document.getElementById('gameBadge').value = game.badge || '';
             document.getElementById('gameImage').value = game.image || '';
             document.getElementById('gameDescription').value = game.description || '';
+            document.getElementById('gameRelease').value = game.releaseDate || '';
+            resetReleaseStatus();
 
             updatePreviewImage(game.image);
             updateGoogleSearchBtn();
@@ -915,6 +944,7 @@
             document.getElementById('btnSubmitForm').textContent = 'Simpan ke Katalog';
             document.getElementById('btnCancelEdit').style.display = 'none';
             document.getElementById('previewBox').innerHTML = '<span>Preview Cover</span>';
+            resetReleaseStatus();
         }
 
         async function deleteGame(id) {
@@ -1181,6 +1211,118 @@
                 btn.disabled = false;
             }
         }
+
+        // ==========================================
+        // TANGGAL RILIS OTOMATIS (WIKIDATA)
+        // ==========================================
+        const BULAN_PENDEK = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+
+        function formatReleaseShort(iso) {
+            if (!isValidIsoDate(iso)) return '';
+            const [y, m, d] = iso.split('-').map(Number);
+            return `${d} ${BULAN_PENDEK[m - 1]} ${y}`;
+        }
+
+        function sortByReleaseDesc(games) {
+            return [...games].sort((a, b) => {
+                const da = a.releaseDate || '', dbb = b.releaseDate || '';
+                if (da && dbb) return dbb.localeCompare(da);
+                if (da) return -1;
+                if (dbb) return 1;
+                return (Number(b.id) || 0) - (Number(a.id) || 0);
+            });
+        }
+
+        function setReleaseStatus(text, color) {
+            const el = document.getElementById('releaseStatus');
+            if (!el) return;
+            el.textContent = text;
+            el.style.color = color || 'var(--text-muted)';
+        }
+
+        function resetReleaseStatus() {
+            setReleaseStatus('Terisi otomatis dari Wikidata saat judul diketik. Bisa juga diisi manual.');
+        }
+
+        let releaseFetchSeq = 0;
+        // force=true: tombol "Cari Otomatis" / saat simpan. force=false: saat kolom judul ditinggalkan.
+        async function autoFillReleaseDate(force) {
+            const title = document.getElementById('gameTitle').value.trim();
+            const input = document.getElementById('gameRelease');
+            if (!title) { if (force) setReleaseStatus('Isi judul game dulu.', 'var(--danger, #e5484d)'); return null; }
+            if (!force && input.value) return null;
+
+            const seq = ++releaseFetchSeq;
+            const btn = document.getElementById('btnFetchRelease');
+            btn.disabled = true;
+            setReleaseStatus('Mencari tanggal rilis...');
+            try {
+                const res = await fetchReleaseDate(title);
+                if (seq !== releaseFetchSeq) return null;
+                if (!res) {
+                    setReleaseStatus('Tanggal rilis tidak ditemukan. Silakan isi manual.', 'var(--warning, #f5a524)');
+                    return null;
+                }
+                input.value = res.date;
+                setReleaseStatus(`Ditemukan: ${res.matchedTitle} (${formatReleaseShort(res.date)})${res.approximate ? ', tanggal perkiraan, sebaiknya dicek' : ''}. Cek lagi jika judulnya kurang pas.`, res.approximate ? 'var(--warning, #f5a524)' : 'var(--success, #30a46c)');
+                return res.date;
+            } catch (err) {
+                setReleaseStatus(releaseErrorMessage(err), 'var(--danger, #e5484d)');
+                return null;
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        let bulkReleaseRunning = false;
+        async function bulkFillReleaseDates() {
+            if (bulkReleaseRunning) return;
+            const targets = adminGames.filter(g => !g.releaseDate);
+            if (targets.length === 0) { showToast('Semua game sudah punya tanggal rilis'); return; }
+            if (!confirm(`Cari tanggal rilis untuk ${targets.length} game yang belum punya tanggal? Proses ini butuh beberapa saat.`)) return;
+
+            bulkReleaseRunning = true;
+            const btn = document.getElementById('btnBulkRelease');
+            btn.disabled = true;
+            let ok = 0, cloudFailed = 0, notFound = [];
+            try {
+                for (let i = 0; i < targets.length; i++) {
+                    const game = targets[i];
+                    btn.textContent = `Memproses ${i + 1}/${targets.length}...`;
+                    try {
+                        const res = await fetchReleaseDate(game.title);
+                        if (res) {
+                            game.releaseDate = res.date;
+                            ok++;
+                            if (isFirebaseReady && typeof updateGameInFirebase === 'function') {
+                                try { await updateGameInFirebase(game.id, game); }
+                                catch (fbErr) { cloudFailed++; }
+                            }
+                        } else {
+                            notFound.push(game.title);
+                        }
+                    } catch (err) {
+                        if (err.message === 'NETWORK' || err.message === 'HTTP_429') {
+                            alert(releaseErrorMessage(err));
+                            break;
+                        }
+                        notFound.push(game.title);
+                    }
+                    await new Promise(r => setTimeout(r, 600));
+                }
+            } finally {
+                saveAdminData();
+                bulkReleaseRunning = false;
+                btn.disabled = false;
+                btn.textContent = 'Isi Tanggal Rilis Otomatis';
+            }
+            showToast(`${ok} tanggal rilis berhasil diisi`);
+            if (cloudFailed) alert(`${cloudFailed} game gagal disimpan ke Cloud Firestore (tersimpan di lokal). Pastikan sudah login sebagai admin.`);
+            if (notFound.length) {
+                alert(`Tidak ditemukan (${notFound.length}), silakan isi manual lewat tombol Edit:\n\n- ` + notFound.join('\n- '));
+            }
+        }
+
 
         function showToast(msg) {
             const toast = document.getElementById('toast');
